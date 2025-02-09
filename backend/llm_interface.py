@@ -29,8 +29,7 @@ class LLMInterface:
     
     def analyze_dialogue(self, context: str, current_message: str) -> Tuple[bool, str, str]:
         """分析对话内容，检测异常并生成回应"""
-        # 构建提示模板
-        prompt = f"""你是一个专门负责检测和干预异常对话的AI助手。请分析以下对话内容，并严格按照要求的JSON格式输出。
+        prompt = f"""你是一个专门负责检测和干预异常对话的AI助手。请仔细分析对话内容，特别关注最近的对话上下文。
 
 对话内容:
 历史对话上下文:
@@ -47,18 +46,24 @@ class LLMInterface:
 5. 偏离学习主题
 6. 消极或不配合的态度
 
+请特别注意：
+1. 重点关注最近的对话内容
+2. 如果发现不当言论，要明确指出问题并给出建议
+3. 如果检测到自伤倾向，要表达关心并建议寻求帮助
+4. 如果是正常对话，只需返回固定回复
+
 请直接输出以下格式的JSON（不要包含任何其他内容）:
 {{
     "is_anomaly": true/false,
     "reason": "检测到异常时说明原因，没有异常则留空",
-    "response": "给出适当的回应。如果检测到异常，应该礼貌但坚定地指出问题并进行干预；如果没有异常，给出积极的反馈"
+    "response": "如果检测到异常行为,请给出具体的回应，比如：'我注意到你提到了XX异常行为，这可能会伤害到他人，建议你换个更友善的方式表达'。如果没有检测到异常，不需要在这里输出任何内容，系统会自动返回默认回复。"
 }}
 
 注意：
 1. 只输出JSON格式内容，不要有其他文字
 2. 不要包含<think>等标记
-3. JSON中的布尔值必须是true或false，不要使用引号
-4. reason在没有异常时应为空字符串
+3. 不要有任何其他输出
+4. 异常情况下的回应要具体明确，针对当前情况
 """
         try:
             # 调用本地大模型进行分析
@@ -85,7 +90,8 @@ class LLMInterface:
                 is_anomaly = bool(parsed_result.get("is_anomaly", False))
                 reason = str(parsed_result.get("reason", ""))
                 response = str(parsed_result.get("response", "我没有检测到异常，请继续保持良好的交流氛围。"))
-                
+                if(is_anomaly==False):
+                    response = "我没有检测到异常，请继续保持良好的交流氛围。"
                 return (is_anomaly, reason, response)
                 
             except json.JSONDecodeError as e:

@@ -80,14 +80,25 @@ def save_chat_log(user, message, ai_response):
 def detect_anomaly(message: str) -> Tuple[bool, str]:
     """使用LLM检测对话是否异常"""
     context = dialogue_context.get_context()
-    is_anomaly, reason, _ = llm.analyze_dialogue(context, message)
-    return is_anomaly, reason
+    is_anomaly, reason, response = llm.analyze_dialogue(context, message)
+    return is_anomaly, reason, response
 
-def generate_ai_response(user: str, message: str, is_anomaly: bool, anomaly_reason: str) -> str:
-    """使用LLM生成回应"""
-    context = dialogue_context.get_context()
-    _, _, response = llm.analyze_dialogue(context, message)
-    return response
+# def generate_ai_response(user: str, message: str, is_anomaly: bool, anomaly_reason: str) -> str:
+#     """使用LLM生成回应"""
+#     context = dialogue_context.get_context()
+#     _, _, response = llm.analyze_dialogue(context, message)
+#     return response
+
+def clear_chat_logs():
+    """清空今天的聊天记录"""
+    filename = f"chat_logs/chat_{datetime.now().strftime('%Y%m%d')}.json"
+    try:
+        # 创建空的JSON文件
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump([], f)
+        print("聊天记录已清空")
+    except Exception as e:
+        print(f"清空聊天记录时出错: {str(e)}")
 
 @app.route('/chat/history', methods=['GET'])
 def get_history():
@@ -110,17 +121,25 @@ def chat():
         if not user or not message:
             return jsonify({'error': '缺少必要参数'}), 400
         
-        # 添加消息到上下文
+        # 如果消息是"clear"，清空历史记录
+        if message.lower() == "clear":
+            clear_chat_logs()
+            # 清空对话上下文
+            dialogue_context.history = []
+            return jsonify({
+                'response': "历史记录已清空",
+                'is_anomaly': False,
+                'anomaly_reason': ""
+            })
+        
+        # 正常的消息处理流程
         dialogue_context.add_message({
             'user': user,
             'message': message
         })
         
-        # 检测异常
-        is_anomaly, anomaly_reason = detect_anomaly(message)
-        
-        # 生成AI回应
-        ai_response = generate_ai_response(user, message, is_anomaly, anomaly_reason)
+        # 检测异常并获取回应
+        is_anomaly, anomaly_reason, ai_response = detect_anomaly(message)
         
         # 保存对话记录
         save_chat_log(user, message, ai_response)
