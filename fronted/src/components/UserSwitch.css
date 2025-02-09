@@ -1,0 +1,22 @@
+.user-switch {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.switch-buttons {
+  margin-top: 10px;
+}
+
+.switch-buttons button {
+  margin: 0 10px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #e0e0e0;
+}
+
+.switch-buttons button.active {
+  background-color: #4CAF50;
+  color: white;
+} 

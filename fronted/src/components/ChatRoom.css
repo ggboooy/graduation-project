@@ -1,0 +1,8 @@
+.chat-room {
+  display: flex;
+  flex-direction: column;
+  height: 70vh;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+} 
