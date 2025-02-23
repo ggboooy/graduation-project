@@ -68,7 +68,7 @@ class LLMInterface:
         try:
             # 调用本地大模型进行分析
             result = ollama.chat(
-                model="deepseek-r1:7b",
+                model="deepseek-r1",
                 stream=False,
                 messages=[{"role": "user", "content": prompt}],
                 options={"temperature": 0}
