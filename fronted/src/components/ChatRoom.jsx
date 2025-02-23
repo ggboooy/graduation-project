@@ -77,6 +77,12 @@ function ChatRoom({ currentUser }) {
           content: data.response,
           sender: 'AI助手',
           timestamp: new Date().toLocaleString(),
+          aiResponse: {
+            is_anomaly: data.is_anomaly,
+            reason: data.reason,
+            analysis: data.analysis,
+            responses: data.responses
+          }
         };
         setMessages(prev => [...prev, aiMessage]);
       }
@@ -85,9 +91,31 @@ function ChatRoom({ currentUser }) {
     }
   };
 
+  // 添加获取针对性回应的函数
+  const getResponseForCurrentUser = (message) => {
+    if (!message.aiResponse?.responses) return message.content;
+    
+    const { analysis, responses } = message.aiResponse;
+    
+    // 根据当前用户身份返回对应的回应
+    if (currentUser === analysis.attacker) {
+      return responses.to_attacker;
+    } else if (currentUser === analysis.victim) {
+      return responses.to_victim;
+    } else {
+      return responses.to_others;
+    }
+  };
+
   return (
     <div className="chat-room">
-      <MessageList messages={messages} currentUser={currentUser} />
+      <MessageList 
+        messages={messages.map(message => ({
+          ...message,
+          content: message.sender === 'AI助手' ? getResponseForCurrentUser(message) : message.content
+        }))} 
+        currentUser={currentUser} 
+      />
       <div ref={messagesEndRef} />
       <MessageInput onSendMessage={handleSendMessage} />
     </div>
